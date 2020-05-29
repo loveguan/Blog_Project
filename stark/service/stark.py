@@ -35,7 +35,7 @@ class ShowList(object):
         self.request = request
         # 分页
         data_count = self.data_list.count()
-        current_page = int(self.request.GET.get('page',1))
+        current_page = int(self.request.GET.get('page', 1))
         base_path = self.request.path
         params = self.request.GET
         per_page_num = 1
@@ -43,6 +43,8 @@ class ShowList(object):
         self.pagination = Pagination(current_page, data_count, base_path, params, per_page_num, pager_count, )
         # 分页后的数据
         self.page_data = self.data_list[self.pagination.start:self.pagination.end]
+        # action批量初始化，字段
+        self.actions = self.config.actions
 
     def get_header(self):
         head_list = []
@@ -95,14 +97,29 @@ class ShowList(object):
         print(new_data_list)
         return new_data_list
 
+    def get_action_list(self):
+        """action批量初始化，架构数据"""
+        temp = []
+        for action in self.actions:
+            temp.append(
+                {
+                    'name': action.__name__,
+                    'desc': action.short_description
+                }
+            )
+        return temp
+
 
 class ModelStark(object):
     # 表单现实的字段
     list_display = ["__str__"]
 
-    # 表单做的连接
+    # 表单做的超连接
     list_display_links = []
-
+    # 查询过滤的字段
+    search_fields = []
+    # 批量动作
+    actions = []
     # modeform构建
     modelform_class = None
 
@@ -224,13 +241,25 @@ class ModelStark(object):
         temp.append(ModelStark.deletes)
         return temp
 
+    def get_search_condition(self, request):
+        # 模糊查询
+        key_word = request.GET.get('q')
+        self.key_word = key_word
+        print(key_word)
+        from django.db.models import Q
+        search_connection = Q()
+        if key_word:
+            search_connection.connector = 'or'
+            for search_field in self.search_fields:
+                search_connection.children.append((search_field + "__contains", key_word))
+        return search_connection
+
     # 展示list
     def list_view(self, request):
-        print(self.model)
-        print('list_display', self.list_display)
-        # 获取所有的数据
-        data_list = self.model.objects.all()
-        print(data_list)
+
+        # 模糊查询过滤
+        search_connection = self.get_search_condition(request)
+        data_list = self.model.objects.all().filter(search_connection)
         # 构建一个对象showlist，表头，表单，在html直接调用对象获取表头和表单
         show_list = ShowList(self, data_list, request)
         # 增加按钮的url

@@ -25,6 +25,7 @@ from .models import *
 from django.forms import ModelForm
 from django.forms import widgets as wid
 
+
 class BookModelForm(ModelForm):
     class Meta:
         model = Book
@@ -33,9 +34,11 @@ class BookModelForm(ModelForm):
         labels = {
             "title": "书籍名称",
             "price": "价格",
-            "authors":"作者",
-            "publishDate":"出版日期",
+            "authors": "作者",
+            "publishDate": "出版日期",
         }
+
+
 class AuthorModelForm(ModelForm):
     class Meta:
         model = Book
@@ -43,17 +46,26 @@ class AuthorModelForm(ModelForm):
 
 
 class BookConfig(ModelStark):
-
-    list_display = ['nid',"title", "price", "publishDate"]
+    list_display = ['nid', "title", "price", "publishDate"]
     list_display_links = ["price"]
+    search_fields = ['title', 'price']
     modelform_class = BookModelForm
 
+    # 批量修改数据
+    def patch_init(self, request, queryset):
+        queryset.update(price=100)
+
+    patch_init.short_description = '批量初始化'
+    actions = [patch_init]
+
+
 class AuthorConfig(ModelStark):
-    list_display = ['name','age']
+    list_display = ['name', 'age']
     # 使用默认的modelform，注释掉自己写的
     # modelform_class = AuthorModelForm
 
+
 site.rigister(Book, BookConfig)
 site.rigister(Publish)
-site.rigister(Author,AuthorConfig)
+site.rigister(Author, AuthorConfig)
 site.rigister(AuthorDetail)
