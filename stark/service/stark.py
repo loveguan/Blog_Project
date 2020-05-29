@@ -256,8 +256,18 @@ class ModelStark(object):
 
     # 展示list
     def list_view(self, request):
-
-        # 模糊查询过滤
+        # 批量操作
+        if request.method == 'POST':
+            print('post', request.POST)
+            action = request.POST.get('action')
+            if action:
+                selected_pk = request.POST.getlist('selected_pk')
+                # 反射查询
+                action_func = getattr(self, action)
+                print(selected_pk)
+                queryset = self.model.objects.filter(pk__in=selected_pk)
+                ret = action_func(request, queryset)
+        # 获取search Q 对象
         search_connection = self.get_search_condition(request)
         data_list = self.model.objects.all().filter(search_connection)
         # 构建一个对象showlist，表头，表单，在html直接调用对象获取表头和表单
