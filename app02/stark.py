@@ -56,6 +56,9 @@ class BookConfig(ModelStark):
         queryset.update(price=100)
 
     patch_init.short_description = '批量初始化'
+
+
+
     actions = [patch_init]
 
 

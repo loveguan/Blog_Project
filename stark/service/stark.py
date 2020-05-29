@@ -44,7 +44,7 @@ class ShowList(object):
         # 分页后的数据
         self.page_data = self.data_list[self.pagination.start:self.pagination.end]
         # action批量初始化，字段
-        self.actions = self.config.actions
+        self.actions = self.config.new_actions()
 
     def get_header(self):
         head_list = []
@@ -107,6 +107,7 @@ class ShowList(object):
                     'desc': action.short_description
                 }
             )
+        print(temp)
         return temp
 
 
@@ -127,6 +128,19 @@ class ModelStark(object):
     def __init__(self, model, site):
         self.model = model
         self.site = site
+
+    # 批量删除函数
+    def patch_delete(self, request, queryset):
+        queryset.delete()
+
+    patch_delete.short_description = "Delete selected"
+
+    # 增加新定义的
+    def new_actions(self):
+        temp = []
+        temp.extend(self.actions)
+        temp.append(ModelStark.patch_delete)
+        return temp
 
     # url反向解析
     def get_change_url(self, obj):
@@ -258,6 +272,7 @@ class ModelStark(object):
     def list_view(self, request):
         # 批量操作
         if request.method == 'POST':
+            print('-----------------')
             print('post', request.POST)
             action = request.POST.get('action')
             if action:
@@ -266,6 +281,8 @@ class ModelStark(object):
                 action_func = getattr(self, action)
                 print(selected_pk)
                 queryset = self.model.objects.filter(pk__in=selected_pk)
+                print('==========')
+                print(queryset)
                 ret = action_func(request, queryset)
         # 获取search Q 对象
         search_connection = self.get_search_condition(request)
