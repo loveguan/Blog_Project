@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h4 class="col-md-9 text-center">数据列表</h4>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 ">
+                <a style="margin-bottom: 5px" href="{{ add_url }}" class="btn btn-primary">添加数据</a>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                        {% for item in show_list.get_header %}
+                            <th>{{ item }}</th>
+                        {% endfor %}
+                    </tr>
+
+                    </thead>
+                    <tbody>
+                    <tr>
+                        {% for data in show_list.get_body %}
+                            <tr>
+                                {% for item in data %}
+                                    <td>{{ item }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tr>
+                    </tbody>
+                </table>
+            <nav>
+                <ul class="pagination">
+                    {{ show_list.pagination.page_html|safe }}
+                </ul>
+            </nav>
+            </div>
+        </div>
+    </div>
+{% endblock %}
