@@ -274,6 +274,7 @@ class ModelStark(object):
         if request.method == 'POST':
             print('-----------------')
             print('post', request.POST)
+            print("request.POST:", request.POST)
             action = request.POST.get('action')
             if action:
                 selected_pk = request.POST.getlist('selected_pk')

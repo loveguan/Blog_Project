@@ -15,8 +15,7 @@
 
                 <form action="" method="post">
                     {% csrf_token %}
-                    <select name="action" id=""
-                            style="display:inline-block;width: 200px;margin: 8px 8px 8px 0px;height: 25px">
+                    <select name="action" id=""  style="display:inline-block;width: 200px;margin: 8px 8px 8px 0px;height: 25px">
                         <option value="">------</option>
                         {% for item in show_list.get_action_list %}
                             <option value="{{ item.name }}">{{ item.desc }}</option>
@@ -33,6 +32,7 @@
                         </tr>
 
                         </thead>
+
                         <tbody>
                         <tr>
                             {% for data in show_list.get_body %}
