@@ -44,11 +44,10 @@ class ShowList(object):
         # 分页后的数据
         self.page_data = self.data_list[self.pagination.start:self.pagination.end]
         # action批量初始化，字段
-        self.actions = self.config.actions
+        self.actions = self.config.new_actions()
 
     def get_header(self):
         head_list = []
-        print('header', self.config.new_list_play())
 
         for field in self.config.new_list_play():
             if callable(field):
@@ -61,7 +60,6 @@ class ShowList(object):
                     val = self.config.model._meta.get_field(field).verbose_name
 
                     head_list.append(val)
-        print(head_list)
         return head_list
 
     def get_body(self):
@@ -94,7 +92,6 @@ class ShowList(object):
                            ]
 
                   '''
-        print(new_data_list)
         return new_data_list
 
     def get_action_list(self):
@@ -127,6 +124,18 @@ class ModelStark(object):
     def __init__(self, model, site):
         self.model = model
         self.site = site
+
+    def patch_delete(self, request, queryset):
+        queryset.delete()
+
+    patch_delete.short_description = "Delete selected"
+
+    # 构造新的acton
+    def new_actions(self):
+        temp = []
+        temp.append(ModelStark.patch_delete)
+        temp.extend(self.actions)
+        return temp
 
     # url反向解析
     def get_change_url(self, obj):
@@ -173,8 +182,8 @@ class ModelStark(object):
     def check_box(self, obj=None, header=False):
 
         if header:
-            return '选择'
-        return mark_safe("<input id='choice' type='checkbox'>")
+            return mark_safe('<input id="choice" type="checkbox">')
+        return mark_safe("<input id='choice_item' type='checkbox' name='selected_pk' value='%s'>" % obj.pk)
 
     # modeform构建，如果没有就用的默认的
 
@@ -257,6 +266,13 @@ class ModelStark(object):
     # 展示list
     def list_view(self, request):
 
+        if request.method == 'POST':
+            print('post', request.POST)
+            print("POST:", request.POST)
+            action = request.POST.get("action")  # patch_init
+            selected_pk = request.POST.getlist("selected_pk")
+            action_func = getattr(self, action)
+            print(action, selected_pk, action_func)
         # 模糊查询过滤
         search_connection = self.get_search_condition(request)
         data_list = self.model.objects.all().filter(search_connection)
