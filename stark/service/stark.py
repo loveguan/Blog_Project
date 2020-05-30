@@ -71,15 +71,30 @@ class ShowList(object):
             temp = []
             for field in self.config.new_list_play():
                 if callable(field):
+                    # 直接调用field方法
                     val = field(self.config, obj)
                 else:
-                    val = getattr(obj, field)
-                    # 在连接表里边，在字段做超链接
-                    if field in self.config.list_display_links:
-                        model_name = self.config.model._meta.model_name
-                        app_label = self.config.model._meta.app_label
-                        _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
-                        val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
+                    from django.db.models.fields.related import ManyToManyField, ForeignKey
+                    """
+                    """
+                    field_obj = self.config.model._meta.get_field(field)
+                    # 多对多的处理逻辑，这里根据自己的需要处理多对多数据的格式
+                    if isinstance(field_obj, ManyToManyField):
+                        # 这个地方要注意，反射obj是实例对象，获取值
+                        ret = getattr(obj, field).all()
+                        t = []
+                        for objj in ret:
+                            # 这里边要注意变量名冲突
+                            t.append(str(objj))
+                        val = ','.join(t)
+                    else:
+                        val = getattr(obj, field)
+                        # 在连接表里边，在字段做超链接
+                        if field in self.config.list_display_links:
+                            model_name = self.config.model._meta.model_name
+                            app_label = self.config.model._meta.app_label
+                            _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
+                            val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
                 temp.append(val)
             new_data_list.append(temp)
             '''
@@ -119,14 +134,19 @@ class ModelStark(object):
     actions = []
     # modeform构建
     modelform_class = None
+    # 过滤列表
+    list_filter = []
 
     # 初始化
     def __init__(self, model, site):
         self.model = model
         self.site = site
 
+    # 批量删除动作，每个都有的
     def patch_delete(self, request, queryset):
         queryset.delete()
+        print(request.path)
+        return redirect(request.path)
 
     patch_delete.short_description = "Delete selected"
 
@@ -250,6 +270,7 @@ class ModelStark(object):
         temp.append(ModelStark.deletes)
         return temp
 
+    # 搜索条件
     def get_search_condition(self, request):
         # 模糊查询
         key_word = request.GET.get('q')
@@ -263,6 +284,17 @@ class ModelStark(object):
                 search_connection.children.append((search_field + "__contains", key_word))
         return search_connection
 
+    # 过滤条件
+    def get_filter_condition(self, request):
+        """filter查询"""
+        from django.db.models import Q
+        filter_condition = Q()
+        # 并且
+        for filter_field, val in request.GET.items():
+            if filter_field in self.list_filter:
+                filter_condition.children.append((filter_field, val))
+        return filter_condition
+
     # 展示list
     def list_view(self, request):
 
@@ -270,12 +302,17 @@ class ModelStark(object):
             print('post', request.POST)
             print("POST:", request.POST)
             action = request.POST.get("action")  # patch_init
-            selected_pk = request.POST.getlist("selected_pk")
-            action_func = getattr(self, action)
-            print(action, selected_pk, action_func)
-        # 模糊查询过滤
+            if action:
+                selected_pk = request.POST.getlist("selected_pk")
+                # 反射获取action
+                action_func = getattr(self, action)
+                query_set = self.model.objects.filter(pk__in=selected_pk)
+                ret = action_func(request, query_set)
+        # 模糊查询过滤，构建搜搜Q对象
         search_connection = self.get_search_condition(request)
-        data_list = self.model.objects.all().filter(search_connection)
+        # 构建过滤Q对象
+        filter_condition = self.get_filter_condition(request)
+        data_list = self.model.objects.all().filter(search_connection).filter(filter_condition)
         # 构建一个对象showlist，表头，表单，在html直接调用对象获取表头和表单
         show_list = ShowList(self, data_list, request)
         # 增加按钮的url

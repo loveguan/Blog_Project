@@ -46,7 +46,7 @@ class AuthorModelForm(ModelForm):
 
 
 class BookConfig(ModelStark):
-    list_display = ['nid', "title", "price", "publishDate"]
+    list_display = ['nid', "title", "price", "publish", "authors", "publishDate"]
     list_display_links = ["price"]
     search_fields = ['title', 'price']
     modelform_class = BookModelForm

@@ -16,6 +16,8 @@ class Pagination(object):
             current_page = 1
         if current_page < 1:
             current_page = 1
+        if current_page > all_count:
+            current_page = 1
         self.current_page = current_page
         self.all_count = all_count
         self.per_page_num = per_page_num
