@@ -53,6 +53,23 @@
             </div>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="filter">
+            {% for filter_field, linktags in show_list.get_filter_linktags.items %}
+
+                <div class="well">
+                    <p>{{ filter_field.upper }}</p>
+
+                    {% for link in linktags %}
+                        <p>{{ link|safe }}</p>
+                    {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+    </div>
 {% endblock %}
 {% block javascript %}
     <script type="text/javascript">

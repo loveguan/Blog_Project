@@ -50,7 +50,7 @@ class BookConfig(ModelStark):
     list_display_links = ["price"]
     search_fields = ['title', 'price']
     modelform_class = BookModelForm
-
+    list_filter = ['authors','publish','title']
     # 批量修改数据
     def patch_init(self, request, queryset):
         queryset.update(price=100)

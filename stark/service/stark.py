@@ -27,6 +27,11 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from stark.utils.page import Pagination
 
+from django.db.models import Q  # 与或非
+from django.db.models.fields.related import ForeignKey
+from django.db.models.fields.related import ManyToManyField
+import copy
+
 
 class ShowList(object):
     def __init__(self, config, data_list, request):
@@ -46,6 +51,40 @@ class ShowList(object):
         # action批量初始化，字段
         self.actions = self.config.new_actions()
 
+    # filter tag标签
+    def get_filter_linktags(self):
+        link_dic = {}
+        for filter_field in self.config.list_filter:
+            print(filter_field)
+            # 获取URL相关的字段
+            current_id = self.request.GET.get(filter_field, 0)
+            import copy
+            params = copy.deepcopy(self.request.GET)
+            # 生成页面，各种字段
+            filter_field_obj = self.config.model._meta.get_field(filter_field)
+            print(filter_field_obj, type(filter_field_obj))
+            if isinstance(filter_field_obj, ForeignKey) or isinstance(filter_field_obj, ManyToManyField):
+                data_list = filter_field_obj.remote_field.model.objects.all()
+            else:
+                data_list = self.config.model.objects.all().values('pk', filter_field)
+            print(data_list)
+        #     生成标签
+        tmp = []
+        if params.get(filter_field):
+            del params[filter_field]
+            tmp.append("<a href='?%s'>全部</a>" % params.urlencode())
+        else:
+            tmp.append("<a href='#' class='active'>全部</a>")
+        # 处理filter字段的href
+        for obj1 in data_list:
+            # 一对一，一对多
+            if isinstance(filter_field_obj, ForeignKey) or isinstance(filter_field_obj, ManyToManyField):
+                pass
+            else:
+                pass
+        return link_dic
+
+    # 表头
     def get_header(self):
         head_list = []
 
