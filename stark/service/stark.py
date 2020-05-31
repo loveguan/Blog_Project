@@ -94,7 +94,8 @@ class ShowList(object):
                 else:
                     link_tag = "<a href='?%s'>%s</a>" % (_url, text)
                 tmp.append(link_tag)
-            link_dic[filter_field] = tmp
+            # 将filter 过滤字段处理为中文，注意点
+            link_dic[filter_field_obj.verbose_name] = tmp
             print(link_dic)
         return link_dic
 
