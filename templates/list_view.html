@@ -1,4 +1,16 @@
 {% extends 'base.html' %}
+{% block css_self %}
+    <style type="text/css">
+        .active {
+            color: red !important;
+        }
+
+        .filter a {
+            text-decoration: none;
+            color: grey;
+        }
+    </style>
+{% endblock %}
 {% block content %}
     <h4 class="col-md-9 text-center">数据列表</h4>
     <div class="container">
@@ -51,24 +63,25 @@
                 </form>
 
             </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="filter">
-            {% for filter_field, linktags in show_list.get_filter_linktags.items %}
+            <div class="col-md-3">
+                <div class="filter">
+                    {% for filter_field, linktags in show_list.get_filter_linktags.items %}
 
-                <div class="well">
-                    <p>{{ filter_field.upper }}</p>
+                        <div class="well">
+                            <p>{{ filter_field.upper }}</p>
 
-                    {% for link in linktags %}
-                        <p>{{ link|safe }}</p>
+                            {% for link in linktags %}
+                                <p>{{ link|safe }}</p>
+                            {% endfor %}
+
+                        </div>
+
                     {% endfor %}
 
                 </div>
-
-            {% endfor %}
-
+            </div>
         </div>
+
     </div>
 {% endblock %}
 {% block javascript %}

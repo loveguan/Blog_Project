@@ -54,6 +54,7 @@ class ShowList(object):
     # filter tag标签
     def get_filter_linktags(self):
         link_dic = {}
+        # 取出每一个filter字段的处理逻辑
         for filter_field in self.config.list_filter:
             print(filter_field)
             # 获取URL相关的字段
@@ -68,20 +69,33 @@ class ShowList(object):
             else:
                 data_list = self.config.model.objects.all().values('pk', filter_field)
             print(data_list)
-        #     生成标签
-        tmp = []
-        if params.get(filter_field):
-            del params[filter_field]
-            tmp.append("<a href='?%s'>全部</a>" % params.urlencode())
-        else:
-            tmp.append("<a href='#' class='active'>全部</a>")
-        # 处理filter字段的href
-        for obj1 in data_list:
-            # 一对一，一对多
-            if isinstance(filter_field_obj, ForeignKey) or isinstance(filter_field_obj, ManyToManyField):
-                pass
+            #     生成标签
+            tmp = []
+            if params.get(filter_field):
+                del params[filter_field]
+                tmp.append("<a href='?%s'>全部</a>" % params.urlencode())
             else:
-                pass
+                tmp.append("<a href='#' class='active'>全部</a>")
+            # 处理filter字段的href
+            for obj1 in data_list:
+                # 一对一，一对多
+                if isinstance(filter_field_obj, ForeignKey) or isinstance(filter_field_obj, ManyToManyField):
+                    pk = obj1.pk
+                    text = str(obj1)
+                    params[filter_field] = pk
+                else:
+                    # 普通字段
+                    pk = obj1.get(pk)
+                    text = obj1.get(filter_field)
+                    params[filter_field] = text
+                _url = params.urlencode()
+                if str(current_id) == str(pk) or str(current_id) == str(text):
+                    link_tag = "<a href='?%s' class='active'>%s</a>" % (_url, text)
+                else:
+                    link_tag = "<a href='?%s'>%s</a>" % (_url, text)
+                tmp.append(link_tag)
+            link_dic[filter_field] = tmp
+            print(link_dic)
         return link_dic
 
     # 表头
