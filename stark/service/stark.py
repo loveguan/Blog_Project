@@ -61,15 +61,15 @@ class ShowList(object):
             current_id = self.request.GET.get(filter_field, 0)
             import copy
             params = copy.deepcopy(self.request.GET)
-            # 生成页面，各种字段
+            # 生成页面，各种字段，获取field对象
             filter_field_obj = self.config.model._meta.get_field(filter_field)
-            print(filter_field_obj, type(filter_field_obj))
+            # 获取与之关联的所有对象author publish
             if isinstance(filter_field_obj, ForeignKey) or isinstance(filter_field_obj, ManyToManyField):
                 data_list = filter_field_obj.remote_field.model.objects.all()
             else:
+                # 获取当前对象field所有的
                 data_list = self.config.model.objects.all().values('pk', filter_field)
-            print(data_list)
-            #     生成标签
+            # 生成标签
             tmp = []
             if params.get(filter_field):
                 del params[filter_field]
@@ -96,7 +96,6 @@ class ShowList(object):
                 tmp.append(link_tag)
             # 将filter 过滤字段处理为中文，注意点
             link_dic[filter_field_obj.verbose_name] = tmp
-            print(link_dic)
         return link_dic
 
     # 表头
@@ -128,6 +127,8 @@ class ShowList(object):
                     # 直接调用field方法
                     val = field(self.config, obj)
                 else:
+                    print('33333333333333333333333')
+                    print(getattr(obj, "__str__")())
                     from django.db.models.fields.related import ManyToManyField, ForeignKey
                     """
                     """
@@ -142,13 +143,21 @@ class ShowList(object):
                             t.append(str(objj))
                         val = ','.join(t)
                     else:
-                        val = getattr(obj, field)
-                        # 在连接表里边，在字段做超链接
-                        if field in self.config.list_display_links:
-                            model_name = self.config.model._meta.model_name
-                            app_label = self.config.model._meta.app_label
-                            _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
-                            val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
+                        try:
+                            val = getattr(obj, field)
+                            # 在连接表里边，在字段做超链接
+                            if field in self.config.list_display_links:
+                                model_name = self.config.model._meta.model_name
+                                app_label = self.config.model._meta.app_label
+                                _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
+                                val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
+                        except Exception as e:
+                            # 这里要注意在没哟定义display_field 的处理方法
+                            # 获取model 如：autho
+                            val = getattr(obj, field)
+                            _url = self.config.get_change_url(obj)
+                            # 调用val（），__str__方法
+                            val = mark_safe("<a href='%s'>%s</a>" % (_url, val()))
                 temp.append(val)
             new_data_list.append(temp)
             '''
@@ -164,6 +173,7 @@ class ShowList(object):
         return new_data_list
 
     def get_action_list(self):
+
         """action批量初始化，架构数据"""
         temp = []
         for action in self.actions:
@@ -177,9 +187,8 @@ class ShowList(object):
 
 
 class ModelStark(object):
-    # 表单现实的字段
+    # 表单中没有自定义的字段，使用的是默认的字段
     list_display = ["__str__"]
-
     # 表单做的超连接
     list_display_links = []
     # 查询过滤的字段
