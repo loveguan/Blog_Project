@@ -46,8 +46,17 @@ class AuthorModelForm(ModelForm):
 
 
 class BookConfig(ModelStark):
+
+    # 自定义函数，实现自己想实现的东西
+    def title(self, obj=None, header=False):
+        if header:
+            return '书籍名称'
+        else:
+
+            return  obj.title
+
     # 展示的字段
-    list_display = ['nid', "title", "price", "publish", "authors", "publishDate"]
+    list_display = ['nid', title, "price", "publish", "authors", "publishDate"]
     # 展示字段设置链接
     list_display_links = ["price"]
     # 搜索字段
@@ -63,6 +72,7 @@ class BookConfig(ModelStark):
     patch_init.short_description = '批量初始化'
 
     actions = [patch_init]
+
 
 
 class AuthorConfig(ModelStark):

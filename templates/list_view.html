@@ -12,8 +12,10 @@
     </style>
 {% endblock %}
 {% block content %}
-    <h4 class="col-md-9 text-center">数据列表</h4>
+
     <div class="container">
+        <h3 class="float-left">{{ show_list.get_model_name }}</h3>
+        <hr>
         <div class="row">
             <div class="col-md-9 ">
                 <a style="margin-bottom: 5px" href="{{ add_url }}" class="btn btn-primary">添加数据</a>

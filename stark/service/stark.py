@@ -180,6 +180,9 @@ class ShowList(object):
                 }
             )
         return temp
+    def get_model_name(self):
+
+        return self.config.model._meta.verbose_name
 
 
 class ModelStark(object):
