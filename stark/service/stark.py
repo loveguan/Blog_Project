@@ -43,7 +43,7 @@ class ShowList(object):
         current_page = int(self.request.GET.get('page', 1))
         base_path = self.request.path
         params = self.request.GET
-        per_page_num = 1
+        per_page_num = 10
         pager_count = 11
         self.pagination = Pagination(current_page, data_count, base_path, params, per_page_num, pager_count, )
         # 分页后的数据
@@ -250,7 +250,7 @@ class ModelStark(object):
         if header:
             return '编辑'
         _url = self.get_change_url(obj)
-        print("_url", _url)
+        # print("_url", _url)
         return mark_safe("<a href='%s'>编辑</a>" % _url)
 
     def deletes(self, obj=None, header=False):
@@ -258,7 +258,7 @@ class ModelStark(object):
         if header:
             return '操作'
         _url = self.get_delete_url(obj)
-        print('_url', _url)
+        # print('_url', _url)
         return mark_safe("<a href='%s'>删除</a>" % _url)
 
     def check_box(self, obj=None, header=False):
@@ -276,7 +276,7 @@ class ModelStark(object):
             class ModelFormDemo(ModelForm):
                 class Meta:
                     model = self.model
-                    print(self.model)
+                    # print(self.model)
                     fields = "__all__"
 
             return ModelFormDemo
