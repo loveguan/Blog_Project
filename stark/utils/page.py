@@ -16,6 +16,9 @@ class Pagination(object):
             current_page = 1
         if current_page < 1:
             current_page = 1
+        # 判断删除后是否是当前页面大于总页码,如果是的话需要处理当前的页面
+        if current_page > all_count:
+            current_page = 1
         self.current_page = current_page
         self.all_count = all_count
         self.per_page_num = per_page_num

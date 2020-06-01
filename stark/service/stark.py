@@ -27,6 +27,11 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from stark.utils.page import Pagination
 
+from django.db.models import Q  # 与或非
+from django.db.models.fields.related import ForeignKey
+from django.db.models.fields.related import ManyToManyField
+import copy
+
 
 class ShowList(object):
     def __init__(self, config, data_list, request):
@@ -46,9 +51,56 @@ class ShowList(object):
         # action批量初始化，字段
         self.actions = self.config.new_actions()
 
+    # filter tag标签
+    def get_filter_linktags(self):
+        link_dic = {}
+        # 取出每一个filter字段的处理逻辑
+        for filter_field in self.config.list_filter:
+            print(filter_field)
+            # 获取URL相关的字段
+            current_id = self.request.GET.get(filter_field, 0)
+            import copy
+            params = copy.deepcopy(self.request.GET)
+            # 生成页面，各种字段，获取field对象
+            filter_field_obj = self.config.model._meta.get_field(filter_field)
+            # 获取与之关联的所有对象author publish
+            if isinstance(filter_field_obj, ForeignKey) or isinstance(filter_field_obj, ManyToManyField):
+                data_list = filter_field_obj.remote_field.model.objects.all()
+            else:
+                # 获取当前对象field所有的
+                data_list = self.config.model.objects.all().values('pk', filter_field)
+            # 生成标签
+            tmp = []
+            if params.get(filter_field):
+                del params[filter_field]
+                tmp.append("<a href='?%s'>全部</a>" % params.urlencode())
+            else:
+                tmp.append("<a href='#' class='active'>全部</a>")
+            # 处理filter字段的href
+            for obj1 in data_list:
+                # 一对一，一对多
+                if isinstance(filter_field_obj, ForeignKey) or isinstance(filter_field_obj, ManyToManyField):
+                    pk = obj1.pk
+                    text = str(obj1)
+                    params[filter_field] = pk
+                else:
+                    # 普通字段
+                    pk = obj1.get(pk)
+                    text = obj1.get(filter_field)
+                    params[filter_field] = text
+                _url = params.urlencode()
+                if str(current_id) == str(pk) or str(current_id) == str(text):
+                    link_tag = "<a href='?%s' class='active'>%s</a>" % (_url, text)
+                else:
+                    link_tag = "<a href='?%s'>%s</a>" % (_url, text)
+                tmp.append(link_tag)
+            # 将filter 过滤字段处理为中文，注意点
+            link_dic[filter_field_obj.verbose_name] = tmp
+        return link_dic
+
+    # 表头
     def get_header(self):
         head_list = []
-        print('header', self.config.new_list_play())
 
         for field in self.config.new_list_play():
             if callable(field):
@@ -61,7 +113,6 @@ class ShowList(object):
                     val = self.config.model._meta.get_field(field).verbose_name
 
                     head_list.append(val)
-        print(head_list)
         return head_list
 
     def get_body(self):
@@ -73,15 +124,40 @@ class ShowList(object):
             temp = []
             for field in self.config.new_list_play():
                 if callable(field):
+                    # 直接调用field方法
                     val = field(self.config, obj)
                 else:
-                    val = getattr(obj, field)
-                    # 在连接表里边，在字段做超链接
-                    if field in self.config.list_display_links:
-                        model_name = self.config.model._meta.model_name
-                        app_label = self.config.model._meta.app_label
-                        _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
-                        val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
+                    print('33333333333333333333333')
+                    print(getattr(obj, "__str__")())
+                    from django.db.models.fields.related import ManyToManyField, ForeignKey
+                    """
+                    """
+                    field_obj = self.config.model._meta.get_field(field)
+                    # 多对多的处理逻辑，这里根据自己的需要处理多对多数据的格式
+                    if isinstance(field_obj, ManyToManyField):
+                        # 这个地方要注意，反射obj是实例对象，获取值
+                        ret = getattr(obj, field).all()
+                        t = []
+                        for objj in ret:
+                            # 这里边要注意变量名冲突
+                            t.append(str(objj))
+                        val = ','.join(t)
+                    else:
+                        try:
+                            val = getattr(obj, field)
+                            # 在连接表里边，在字段做超链接
+                            if field in self.config.list_display_links:
+                                model_name = self.config.model._meta.model_name
+                                app_label = self.config.model._meta.app_label
+                                _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
+                                val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
+                        except Exception as e:
+                            # 这里要注意在没哟定义display_field 的处理方法
+                            # 获取model 如：autho
+                            val = getattr(obj, field)
+                            _url = self.config.get_change_url(obj)
+                            # 调用val（），__str__方法
+                            val = mark_safe("<a href='%s'>%s</a>" % (_url, val()))
                 temp.append(val)
             new_data_list.append(temp)
             '''
@@ -94,10 +170,10 @@ class ShowList(object):
                            ]
 
                   '''
-        print(new_data_list)
         return new_data_list
 
     def get_action_list(self):
+
         """action批量初始化，架构数据"""
         temp = []
         for action in self.actions:
@@ -107,14 +183,12 @@ class ShowList(object):
                     'desc': action.short_description
                 }
             )
-        print(temp)
         return temp
 
 
 class ModelStark(object):
-    # 表单现实的字段
+    # 表单中没有自定义的字段，使用的是默认的字段
     list_display = ["__str__"]
-
     # 表单做的超连接
     list_display_links = []
     # 查询过滤的字段
@@ -123,23 +197,27 @@ class ModelStark(object):
     actions = []
     # modeform构建
     modelform_class = None
+    # 过滤列表
+    list_filter = []
 
     # 初始化
     def __init__(self, model, site):
         self.model = model
         self.site = site
 
-    # 批量删除函数
+    # 批量删除动作，每个都有的
     def patch_delete(self, request, queryset):
         queryset.delete()
+        print(request.path)
+        return redirect(request.path)
 
     patch_delete.short_description = "Delete selected"
 
-    # 增加新定义的
+    # 构造新的acton
     def new_actions(self):
         temp = []
-        temp.extend(self.actions)
         temp.append(ModelStark.patch_delete)
+        temp.extend(self.actions)
         return temp
 
     # url反向解析
@@ -187,8 +265,8 @@ class ModelStark(object):
     def check_box(self, obj=None, header=False):
 
         if header:
-            return '选择'
-        return mark_safe("<input id='choice' type='checkbox'>")
+            return mark_safe('<input id="choice" type="checkbox">')
+        return mark_safe("<input id='choice_item' type='checkbox' name='selected_pk' value='%s'>" % obj.pk)
 
     # modeform构建，如果没有就用的默认的
 
@@ -255,6 +333,7 @@ class ModelStark(object):
         temp.append(ModelStark.deletes)
         return temp
 
+    # 搜索条件
     def get_search_condition(self, request):
         # 模糊查询
         key_word = request.GET.get('q')
@@ -268,26 +347,35 @@ class ModelStark(object):
                 search_connection.children.append((search_field + "__contains", key_word))
         return search_connection
 
+    # 过滤条件
+    def get_filter_condition(self, request):
+        """filter查询"""
+        from django.db.models import Q
+        filter_condition = Q()
+        # 并且
+        for filter_field, val in request.GET.items():
+            if filter_field in self.list_filter:
+                filter_condition.children.append((filter_field, val))
+        return filter_condition
+
     # 展示list
     def list_view(self, request):
-        # 批量操作
+
         if request.method == 'POST':
-            print('-----------------')
             print('post', request.POST)
-            print("request.POST:", request.POST)
-            action = request.POST.get('action')
+            print("POST:", request.POST)
+            action = request.POST.get("action")  # patch_init
             if action:
-                selected_pk = request.POST.getlist('selected_pk')
-                # 反射查询
+                selected_pk = request.POST.getlist("selected_pk")
+                # 反射获取action
                 action_func = getattr(self, action)
-                print(selected_pk)
-                queryset = self.model.objects.filter(pk__in=selected_pk)
-                print('==========')
-                print(queryset)
-                ret = action_func(request, queryset)
-        # 获取search Q 对象
+                query_set = self.model.objects.filter(pk__in=selected_pk)
+                ret = action_func(request, query_set)
+        # 模糊查询过滤，构建搜搜Q对象
         search_connection = self.get_search_condition(request)
-        data_list = self.model.objects.all().filter(search_connection)
+        # 构建过滤Q对象
+        filter_condition = self.get_filter_condition(request)
+        data_list = self.model.objects.all().filter(search_connection).filter(filter_condition)
         # 构建一个对象showlist，表头，表单，在html直接调用对象获取表头和表单
         show_list = ShowList(self, data_list, request)
         # 增加按钮的url

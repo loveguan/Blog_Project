@@ -1,27 +1,38 @@
 {% extends 'base.html' %}
+{% block css_self %}
+    <style type="text/css">
+        .active {
+            color: red !important;
+        }
+
+        .filter a {
+            text-decoration: none;
+            color: grey;
+        }
+    </style>
+{% endblock %}
 {% block content %}
     <h4 class="col-md-9 text-center">数据列表</h4>
     <div class="container">
         <div class="row">
             <div class="col-md-9 ">
                 <a style="margin-bottom: 5px" href="{{ add_url }}" class="btn btn-primary">添加数据</a>
-
                 {% if show_list.config.search_fields %}
                     <form action="" method="get" class="pull-right">
-                        <input class="input-sm" type="text" name="q" value="{{ show_list.config.keyword }}">
+                        <input type="text" name="q" value="{{ show_list.config.keyword }}">
                         <button class="btn btn-default">submit</button>
                     </form>
                 {% endif %}
-
                 <form action="" method="post">
                     {% csrf_token %}
-                    <select name="action" id=""  style="display:inline-block;width: 200px;margin: 8px 8px 8px 0px;height: 25px">
+                    <select name="action" id="" class="form-control"
+                            style="display:inline-block;width: 200px;margin: 8px 8px 8px 0px;height: 35px;vertical-align: -2px">
                         <option value="">------</option>
                         {% for item in show_list.get_action_list %}
                             <option value="{{ item.name }}">{{ item.desc }}</option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="btn btn-default">GO</button>
+                    <button type="submit" class="btn btn-primary">GO</button>
 
                     <table class="table table-bordered table-striped">
                         <thead>
@@ -32,7 +43,6 @@
                         </tr>
 
                         </thead>
-
                         <tbody>
                         <tr>
                             {% for data in show_list.get_body %}
@@ -46,25 +56,43 @@
                         </tbody>
                     </table>
                     <nav>
-                        <ul class="pagination">
+                        <ul class="pagination  pull-right">
                             {{ show_list.pagination.page_html|safe }}
                         </ul>
                     </nav>
                 </form>
 
+            </div>
+            <div class="col-md-3">
+                <div class="filter">
+                    {% for filter_field, linktags in show_list.get_filter_linktags.items %}
 
+                        <div class="well">
+                            <p>{{ filter_field.upper }}</p>
+
+                            {% for link in linktags %}
+                                <p>{{ link|safe }}</p>
+                            {% endfor %}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
             </div>
         </div>
+
     </div>
+{% endblock %}
+{% block javascript %}
     <script type="text/javascript">
+        /*这个函数是和checkbox连在一起使用的，起到一页上的数据全选全不选的效果*/
         $('#choice').click(function () {
-            if ($(this).prop('checked')) {
-                $('.choice_item').prop('checked', true)
+            if ($(this).prop('checked')) {   //对象自身属性中是否具有指定的属性
+                $('#choice_item').prop("checked", true)
             } else {
-                $('.choice_item').prop('checked', false)
+                $('#choice_item').prop("checked", false)
             }
         })
-
-
     </script>
 {% endblock %}
