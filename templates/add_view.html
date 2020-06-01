@@ -33,3 +33,24 @@
 
     {% include 'form.html' %}
 {% endblock %}
+
+{% block javascript %}
+    <script>
+        //打开open页面
+        function pop(url) {
+            window.open(url, '', 'width=800,height=600,left=100,right=100')
+        }
+
+        //open页面操作完成，返回数据
+        function pop_response(pk, text, id) {
+            //选择哪一个select标签
+            // option的文本值与value值
+            var $option = $('<option>');     //<option></option>
+            $option.html(text);  //<option>南京出版社</option>
+            $option.val(pk);       //<option val=111>南京出版社</option>
+            $option.attr("selected", "selected");       //<option val=111 selected>南京出版社</option>
+            $('#' + id).append($option)
+        }
+    </script>
+
+{% endblock %}

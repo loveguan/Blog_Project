@@ -46,18 +46,21 @@ class AuthorModelForm(ModelForm):
 
 
 class BookConfig(ModelStark):
+    # 展示的字段
     list_display = ['nid', "title", "price", "publish", "authors", "publishDate"]
+    # 展示字段设置链接
     list_display_links = ["price"]
+    # 搜索字段
     search_fields = ['title', 'price']
     modelform_class = BookModelForm
-    list_filter = ['authors','publish','title']
+    # 过滤字段使用
+    list_filter = ['authors', 'publish', 'title']
+
     # 批量修改数据
     def patch_init(self, request, queryset):
         queryset.update(price=100)
 
     patch_init.short_description = '批量初始化'
-
-
 
     actions = [patch_init]
 

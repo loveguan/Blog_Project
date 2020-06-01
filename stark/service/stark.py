@@ -56,7 +56,7 @@ class ShowList(object):
         link_dic = {}
         # 取出每一个filter字段的处理逻辑
         for filter_field in self.config.list_filter:
-            print(filter_field)
+            # print(filter_field)
             # 获取URL相关的字段
             current_id = self.request.GET.get(filter_field, 0)
             import copy
@@ -127,23 +127,19 @@ class ShowList(object):
                     # 直接调用field方法
                     val = field(self.config, obj)
                 else:
-                    print('33333333333333333333333')
-                    print(getattr(obj, "__str__")())
-                    from django.db.models.fields.related import ManyToManyField, ForeignKey
-                    """
-                    """
-                    field_obj = self.config.model._meta.get_field(field)
-                    # 多对多的处理逻辑，这里根据自己的需要处理多对多数据的格式
-                    if isinstance(field_obj, ManyToManyField):
-                        # 这个地方要注意，反射obj是实例对象，获取值
-                        ret = getattr(obj, field).all()
-                        t = []
-                        for objj in ret:
-                            # 这里边要注意变量名冲突
-                            t.append(str(objj))
-                        val = ','.join(t)
-                    else:
-                        try:
+                    try:
+                        from django.db.models.fields.related import ManyToManyField, ForeignKey
+                        field_obj = self.config.model._meta.get_field(field)
+                        # 多对多的处理逻辑，这里根据自己的需要处理多对多数据的格式
+                        if isinstance(field_obj, ManyToManyField):
+                            # 这个地方要注意，反射obj是实例对象，获取值
+                            ret = getattr(obj, field).all()
+                            t = []
+                            for objj in ret:
+                                # 这里边要注意变量名冲突
+                                t.append(str(objj))
+                            val = ','.join(t)
+                        else:
                             val = getattr(obj, field)
                             # 在连接表里边，在字段做超链接
                             if field in self.config.list_display_links:
@@ -151,13 +147,13 @@ class ShowList(object):
                                 app_label = self.config.model._meta.app_label
                                 _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
                                 val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
-                        except Exception as e:
-                            # 这里要注意在没哟定义display_field 的处理方法
-                            # 获取model 如：autho
-                            val = getattr(obj, field)
-                            _url = self.config.get_change_url(obj)
-                            # 调用val（），__str__方法
-                            val = mark_safe("<a href='%s'>%s</a>" % (_url, val()))
+                    except Exception as e:
+                        # 这里要注意在没有定义display_field 的处理方法
+                        # 获取model 如：autho
+                        val = getattr(obj, field)
+                        _url = self.config.get_change_url(obj)
+                        # 调用val（），__str__方法
+                        val = mark_safe("<a href='%s'>%s</a>" % (_url, val()))
                 temp.append(val)
             new_data_list.append(temp)
             '''
@@ -208,7 +204,7 @@ class ModelStark(object):
     # 批量删除动作，每个都有的
     def patch_delete(self, request, queryset):
         queryset.delete()
-        print(request.path)
+        # print(request.path)
         return redirect(request.path)
 
     patch_delete.short_description = "Delete selected"
@@ -288,13 +284,33 @@ class ModelStark(object):
     # 添加
     def add_view(self, request):
         ModelFormDemo = self.get_modelform_class()
+        form = ModelFormDemo()
+
+        from django.forms.boundfield import BoundField
+        from django.forms.models import ModelChoiceField
+        from django.forms.models import ModelMultipleChoiceField
+        # 打印form的每个字段，遍历
+        for bfield in form:
+            # 处理+号问题，注意，好好看一下
+            if isinstance(bfield.field, ModelChoiceField):
+                bfield.is_pop = True
+                related_app_name = bfield.field.queryset.model._meta.app_label
+                related_model_name = bfield.field.queryset.model._meta.model_name
+                _url = reverse("%s_%s_add" % (related_app_name, related_model_name))
+                bfield.url = _url + "?pop_res_id=id_%s" % bfield.name
         if request.method == "POST":
             form = ModelFormDemo(request.POST)
             if form.is_valid():
-                form.save()
-                return redirect(self.get_list_url())
+                obj = form.save()
+                # window.open添加页面要返回的数据
+                pop_res_id = request.GET.get('pop_res_id')
+                if pop_res_id:
+                    res = {"pk": obj.pk, 'text': str(obj), "pop_res_id": pop_res_id}
+                    return render(request, 'pop_view.html', locals())
+                else:
+                    return redirect(self.get_list_url())
             return render(request, 'add_view.html', locals())
-        form = ModelFormDemo()
+
         return render(request, 'add_view.html', locals())
 
     # 删除
@@ -338,7 +354,7 @@ class ModelStark(object):
         # 模糊查询
         key_word = request.GET.get('q')
         self.key_word = key_word
-        print(key_word)
+        # print(key_word)
         from django.db.models import Q
         search_connection = Q()
         if key_word:
@@ -362,8 +378,6 @@ class ModelStark(object):
     def list_view(self, request):
 
         if request.method == 'POST':
-            print('post', request.POST)
-            print("POST:", request.POST)
             action = request.POST.get("action")  # patch_init
             if action:
                 selected_pk = request.POST.getlist("selected_pk")
@@ -399,7 +413,7 @@ class ModelStark(object):
 
     @property
     def urls_2(self):
-        print(self.model)
+        # print(self.model)
         return self.get_urls_2(), None, None
 
 
@@ -411,8 +425,6 @@ class StarkSite(object):
         if not stark_class:
             stark_class = ModelStark
         self._registry[model] = stark_class(model, self)
-        print(self)
-        print(self._registry)
 
     def get_url(self):
 
@@ -425,10 +437,7 @@ class StarkSite(object):
             '''
                      url(r"^app01/userinfo/",UserConfig(Userinfo).urls_2),
                      url(r"^app01/book/",ModelStark(Book).urls_2), 
-
-
                      '''
-        print(temp)
         return temp
 
     @property

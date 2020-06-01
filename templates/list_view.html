@@ -19,8 +19,13 @@
                 <a style="margin-bottom: 5px" href="{{ add_url }}" class="btn btn-primary">添加数据</a>
                 {% if show_list.config.search_fields %}
                     <form action="" method="get" class="pull-right">
-                        <input type="text" name="q" value="{{ show_list.config.keyword }}">
-                        <button class="btn btn-default">submit</button>
+                        <div class="input-group" style="width: 220px">
+                            <input type="text" class="form-control" name="q" value="{{ show_list.config.keyword }}">
+                            <span class="input-group-btn">
+                        <button class="btn btn-primary">submit</button>
+                            </span>
+                        </div>
+
                     </form>
                 {% endif %}
                 <form action="" method="post">

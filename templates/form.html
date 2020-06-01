@@ -1,19 +1,23 @@
 <div class="container">
     <div class="row">
         <div class="col-md-6 col-md-offset-3">
-             <form action="" method="post" novalidate>
+            <form action="" method="post" novalidate>
                 {% csrf_token %}
                 {% for field in form %}
-                <div>
-                    <label for="">{{ field.label }}</label>
-                    {{ field }}
-                    {{ field. }}
-                    <span class=" error pull-right">{{ field.errors.0 }}</span>
-                </div>
+                    <div style="position: relative">
+                        <label for="">{{ field.label }}</label>
+                        {{ field }}
+                        <span class=" error pull-right">{{ field.errors.0 }}</span>
+                        {% if field.is_pop %}
+                            <a href="" onclick="pop('{{ field.url }}')"
+                               style="font-size: 25px;position: absolute;top: 25px;right: -25px"><span>+</span></a>
+
+                        {% endif %}
+                    </div>
                 {% endfor %}
 
-                 <button style="margin-top: 10px" type="submit" class="btn btn-default pull-right">提交</button>
-             </form>
+                <button style="margin-top: 10px" type="submit" class="btn btn-default pull-right">提交</button>
+            </form>
         </div>
     </div>
 </div>
