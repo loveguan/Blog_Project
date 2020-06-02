@@ -19,9 +19,12 @@ from app01.views import index,test_index
 from app01.views import IndexView
 from stark.service.stark import site
 from rbac.views import login
+from rbac.views import logout
+
 urlpatterns = [
     re_path(r'^stark/',site.urls),
     re_path(r'^login/$',login),
+    re_path(r'^logout/$',logout),
     path('admin/', admin.site.urls),
     re_path(r'^$', IndexView.as_view(), name='index'),
     re_path(r'book/', test_index,name='index_test'),
