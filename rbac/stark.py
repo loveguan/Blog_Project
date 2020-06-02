@@ -16,9 +16,10 @@ class RoleConfig(ModelStark):
 
 class PermissionConfig(ModelStark):
     # 展示的字段
-    list_display = ['id','title', 'url']
+    list_display = ['id','title', 'url',]
 
 
 site.rigister(User, UserConfig)
 site.rigister(Role, RoleConfig)
 site.rigister(Permission, PermissionConfig)
+site.rigister(PermissionGroup)

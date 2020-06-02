@@ -13,10 +13,7 @@
 {% endblock %}
 {% block content %}
 
-    <div class="container">
-        <h3 class="float-left">{{ show_list.get_model_name }}</h3>
-        <hr>
-        <div class="row">
+
             <div class="col-md-9 ">
                 <a style="margin-bottom: 5px" href="{{ add_url }}" class="btn btn-primary">添加数据</a>
                 {% if show_list.config.search_fields %}
@@ -87,9 +84,6 @@
 
                 </div>
             </div>
-        </div>
-
-    </div>
 {% endblock %}
 {% block javascript %}
     <script type="text/javascript">

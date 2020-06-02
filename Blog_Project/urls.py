@@ -18,9 +18,10 @@ from django.urls import path, re_path
 from app01.views import index,test_index
 from app01.views import IndexView
 from stark.service.stark import site
-
+from rbac.views import login
 urlpatterns = [
     re_path(r'^stark/',site.urls),
+    re_path(r'^login/$',login),
     path('admin/', admin.site.urls),
     re_path(r'^$', IndexView.as_view(), name='index'),
     re_path(r'book/', test_index,name='index_test'),
