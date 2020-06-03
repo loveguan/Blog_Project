@@ -101,8 +101,9 @@ class ShowList(object):
     # 表头
     def get_header(self):
         head_list = []
-
-        for field in self.config.new_list_play():
+        # 根据实际拥有的权限，处理需要展示的字段
+        _list_display = self.config.new_list_play(self.request)
+        for field in self.config.new_list_play(self.request):
             if callable(field):
                 val = field(self, header=True)
                 head_list.append(val)
@@ -122,10 +123,11 @@ class ShowList(object):
         for obj in self.page_data:
 
             temp = []
-            for field in self.config.new_list_play():
+            for field in self.config.new_list_play(self.request):
                 if callable(field):
                     # 直接调用field方法
-                    val = field(self.config, obj)
+                    header = False
+                    val = field(self.config, obj, header)
                 else:
                     try:
                         from django.db.models.fields.related import ManyToManyField, ForeignKey
@@ -146,7 +148,10 @@ class ShowList(object):
                                 model_name = self.config.model._meta.model_name
                                 app_label = self.config.model._meta.app_label
                                 _url = reverse("%s_%s_change" % (app_label, model_name), args=(obj.pk,))
-                                val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
+                                # 如果在用欧的权限表中有edit权限
+                                if 'edit' in self.request.actions:
+                                    val = mark_safe("<a href='%s'>%s</a>" % (_url, val))
+
                     except Exception as e:
                         # 这里要注意在没有定义display_field 的处理方法
                         # 获取model 如：autho
@@ -180,6 +185,7 @@ class ShowList(object):
                 }
             )
         return temp
+
     def get_model_name(self):
 
         return self.config.model._meta.verbose_name
@@ -245,15 +251,28 @@ class ModelStark(object):
         return _url
 
     # 执行的函数
-    def edit(self, obj=None, header=False):
+    def edit(self, obj=None, header=False, ):
 
         if header:
             return '编辑'
         _url = self.get_change_url(obj)
+        # print(_url)
+        # print('********************************')
+        # for i in request.session["permission_dict"].values():
+        #     for _uurl in i["urls"]:
+        #         print(_uurl)
+        #         permisson = "^%s$" % _uurl
+        #         print(permisson)
+        #         import re
+        #         ret = re.match(permisson,_url)
+        #         print('^^^^^^^^^^^^^^^^^***********')
+        #         print(ret)
+        #         if ret:
+        #           return  mark_safe("<a href='%s'>编辑</a>" % _url)
         # print("_url", _url)
         return mark_safe("<a href='%s'>编辑</a>" % _url)
 
-    def deletes(self, obj=None, header=False):
+    def deletes(self, obj=None, header=False, ):
 
         if header:
             return '操作'
@@ -339,17 +358,20 @@ class ModelStark(object):
         # print(form)
         return render(request, 'add_view.html', locals())
 
-    # 获取组合新的展示的列表，字段加函数（增加checkbox，修改，删除，每个都有）
-    def new_list_play(self):
+    # 获取组合新的展示的列表，字段加函数（增加checkbox，修改，删除，每个都有）,这里做了处理去除没有权限的
+    def new_list_play(self, request):
         temp = []
         # 选择框
         temp.append(ModelStark.check_box)
         temp.extend(self.list_display)
         # 编辑,如果有字段在list_display_links里边,将编辑字段隐藏
         if not self.list_display_links:
-            temp.append(ModelStark.edit)
+            # 判断是否有edit权限，有添加没有隐藏
+            if 'edit' in request.actions:
+                temp.append(ModelStark.edit)
         # 删除
-        temp.append(ModelStark.deletes)
+        if 'delete' in request.actions:
+            temp.append(ModelStark.deletes)
         return temp
 
     # 搜索条件

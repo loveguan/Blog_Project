@@ -58,5 +58,16 @@
 </div>
 {% block javascript %}
 {% endblock %}
+<script>
+     $('.nav li a').click(function () {
+
+            alert('111111111')
+            alert($('this').attr('href'))
+            $('this').parent('li').addClass('active').siblings().removeClass('active')
+
+            {#$(this).parent().prev().html($(this).html());#}
+
+        })
+</script>
 </body>
 </html>

@@ -9,7 +9,6 @@ class ValidPermission(MiddlewareMixin):
 
         # 当前访问路径
         current_path = request.path_info
-        print(current_path)
         # 1.白名单
         valid_url_list = ['/login/', '/logout/', '/reg/', '/admin/.*']
         for valid_url in valid_url_list:
@@ -20,21 +19,17 @@ class ValidPermission(MiddlewareMixin):
         user_id = request.session.get('user_id', None)
         if not user_id:
             _url='/login/?path=%s' %(request.path_info)
-            print(_url)
             return redirect(_url)
-        # 3.检验权限
+        # 3.检验权限,访问一个路径生成在这个url下边所有的权限
         permission_dict = request.session.get('permission_dict', {})
-        flag = False
-        print('=========================================')
+        print('==============')
         print(permission_dict)
-        print('-----------')
-        print(permission_dict.values())
+        flag = False
         for item in permission_dict.values():
             urls = item["urls"]
             for reg in urls:
 
                 permisson = "^%s$" % reg
-                print(permisson)
                 ret = re.match(permisson, current_path)
                 if ret:
                     flag = True
