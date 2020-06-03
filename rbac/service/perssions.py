@@ -14,3 +14,14 @@ def initial_session(request, user):
             permission_dict[gid]['actions'].append(item["permissions__action"])
     print(permission_dict)
     request.session["permission_dict"] = permission_dict
+    # 注册菜单权限
+    permissions = user.roles.all().values("permissions__url", "permissions__action",
+                                          "permissions__group__title").distinct()
+    print("+++++++++++++++++++++++++++++++++++++++")
+    print(permissions)
+    menu_permission_list = []
+    for item in permissions:
+        if item["permissions__action"] == "list":
+            menu_permission_list.append((item["permissions__url"], item["permissions__group__title"]))
+    print(menu_permission_list)
+    request.session["menu_permission_list"] = menu_permission_list
