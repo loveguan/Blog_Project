@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="/static/css/base.css">
     <script src="/static/js/jquery-1.12.4.min.js"></script>
-
     {% block css_self %}
     {% endblock %}
 </head>
@@ -15,7 +14,7 @@
 
 
 {#<div class="header"></div>#}
-<nav class="navbar navbar-inverse navbar-fixed-top">
+<nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
@@ -43,7 +42,7 @@
 <div class="container-fluid">
     <div class="row">
         {% load my_tags %}
-        <div class="col-sm-3 col-md-2 sidebar">
+        <div class="col-sm-3 col-md-2 sidebar  ">
             {% get_menu request %}
         </div>
 
@@ -56,18 +55,28 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    $('.nav>li>a').click(
+        function () {
+            alert('111')
+            $(this).parent().attr('test','test')
+            {#$(this).parent().attr('class','test')#}
+            alert($(this).parent().attr('test'))
+            //alert($(this).parent().attr('class'))
+            {#$(this).parent('li').addClass('active')#}
+            //$(this).parent('li').
+            //$(this).attr('href',"#")
+        }
+    )
+
+    {#$(".nav li a").click(function () {#}
+    {##}
+    {#    alert($(this).attr('href'))#}
+    {#    $(this).parent().addClass('active')#}
+
+</script>
 {% block javascript %}
 {% endblock %}
-<script>
-     $('.nav li a').click(function () {
 
-            alert('111111111')
-            alert($('this').attr('href'))
-            $('this').parent('li').addClass('active').siblings().removeClass('active')
-
-            {#$(this).parent().prev().html($(this).html());#}
-
-        })
-</script>
 </body>
 </html>

@@ -27,9 +27,23 @@
     margin-top: 70px
 }
 
+.nav-sidebar > li > a {
+    padding-right: 20px;
+    padding-left: 20px;
+}
+
+.nav>li>a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+}
+
 .active{
     color: red;
     background-color: #428bca;
+}
+.test{
+    background: #0f0f0f;
 }
 /*.nav>li>a {*/
 /*    position: relative;*/
