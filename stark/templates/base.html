@@ -55,26 +55,6 @@
         </div>
     </div>
 </div>
-<script type="text/javascript">
-    $('.nav>li>a').click(
-        function () {
-            alert('111')
-            $(this).parent().attr('test','test')
-            {#$(this).parent().attr('class','test')#}
-            alert($(this).parent().attr('test'))
-            //alert($(this).parent().attr('class'))
-            {#$(this).parent('li').addClass('active')#}
-            //$(this).parent('li').
-            //$(this).attr('href',"#")
-        }
-    )
-
-    {#$(".nav li a").click(function () {#}
-    {##}
-    {#    alert($(this).attr('href'))#}
-    {#    $(this).parent().addClass('active')#}
-
-</script>
 {% block javascript %}
 {% endblock %}
 

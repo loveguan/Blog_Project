@@ -39,11 +39,8 @@
 }
 
 .active{
-    color: red;
+
     background-color: #428bca;
-}
-.test{
-    background: #0f0f0f;
 }
 /*.nav>li>a {*/
 /*    position: relative;*/
