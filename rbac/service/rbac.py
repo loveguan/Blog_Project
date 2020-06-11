@@ -17,10 +17,12 @@ class ValidPermission(MiddlewareMixin):
                 return None
         # 2.检验是否登录
         user_id = request.session.get('user_id', None)
+        user_name = request.session.get('user_name', None)
         if not user_id:
-            _url='/login/?path=%s' %(request.path_info)
+            _url = '/login/?path=%s' % (request.path_info)
             return redirect(_url)
         # 3.检验权限,访问一个路径生成在这个url下边所有的权限
+
         permission_dict = request.session.get('permission_dict', {})
         print('==============')
         print(permission_dict)
@@ -35,5 +37,9 @@ class ValidPermission(MiddlewareMixin):
                     flag = True
                     request.actions = item["actions"]
                     return None
+        # 如果是admin用户直接过去
+        if user_name == 'admin':
+            request.actions=[]
+            return None
         if not flag:
             return HttpResponse("没有访问权限")
