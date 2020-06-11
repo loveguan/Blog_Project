@@ -39,7 +39,7 @@ class ValidPermission(MiddlewareMixin):
                     return None
         # 如果是admin用户直接过去
         if user_name == 'admin':
-            request.actions=[]
+            request.actions = []
             return None
         if not flag:
             return HttpResponse("没有访问权限")

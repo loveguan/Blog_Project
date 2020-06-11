@@ -14,7 +14,7 @@ def login(request):
         if user:
             request.session['user_id'] = user.pk
             request.session['user_name']=user.name
-            request.session.set_expiry(0)
+            # request.session.set_expiry(0)
             initial_session(request, user)
             if request_param:
                 return redirect(request_param)
